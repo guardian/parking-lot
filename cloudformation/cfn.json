@@ -1,0 +1,257 @@
+{
+    "AWSTemplateFormatVersion": "2010-09-09",
+    "Description": "Simian Army",
+
+    "Parameters": {
+        "App": {
+            "Description": "App applied as a tag",
+            "Type": "String",
+            "Default": "elk"
+        },
+        "Stack": {
+            "Description": "Stack applied as a tag",
+            "Type": "String"
+        },
+        "KeyName": {
+            "Description": "Name of an existing EC2 KeyPair for SSH access",
+            "Type": "String",
+            "Default": "bootstrap"
+        },
+        "Stage": {
+            "Description": "Stage applied as a tag",
+            "Type": "String",
+            "Default": "PROD",
+            "AllowedValues": [ "PROD", "CODE" ],
+            "ConstraintDescription": "must be a valid stage eg. PROD, CODE"
+        },
+        "Capacity": {
+            "Description": "Autoscale Size",
+            "Type": "Number",
+            "Default": "3",
+            "MinValue": 1,
+            "MaxValue": 6
+        },
+        "InstanceType": {
+            "Description": "EC2 instance type",
+            "Type": "String",
+            "Default": "m3.large",
+            "AllowedValues": [
+                "t2.micro",
+                "t2.small",
+                "t2.medium",
+                "m3.medium",
+                "m3.large"
+            ],
+            "ConstraintDescription": "must be a valid EC2 instance type"
+        },
+        "InstanceType": {
+            "Description": "EC2 instance type",
+            "Type": "String",
+            "Default": "t2.micro",
+            "AllowedValues": [
+                "t2.micro",
+                "t2.small",
+                "t2.medium",
+                "m3.medium",
+                "m3.large",
+                "m3.xlarge",
+                "m3.2xlarge"
+            ],
+            "ConstraintDescription": "must be a valid EC2 instance type"
+        },
+        "ConfigBucket": {
+            "Description": "Bucket containing config files",
+            "Default": "parking-lot",
+            "Type": "String"
+        },
+        "PackerAMI": {
+            "Description": "The AMI used",
+            "Type": "String"
+        },
+        "VpcId": {
+            "Description": "ID of the VPC onto which to launch the application eg. vpc-1234abcd",
+            "Type": "String"
+        },
+        "PrivateVpcSubnets" : {
+            "Description": "Subnets to use in VPC for public ELB eg. subnet-abcd1234",
+            "Type": "CommaDelimitedList"
+        }
+    },
+
+    "Resources": {
+
+        "LB": {
+            "Type": "AWS::ElasticLoadBalancing::LoadBalancer",
+            "Properties": {
+                "CrossZone": true,
+                "Listeners": [ {
+                    "Protocol": "HTTP",
+                    "LoadBalancerPort": "80",
+                    "InstancePort": "80",
+                } ],
+                "HealthCheck": {
+                    "Target": "HTTP:80/_",
+                    "Timeout": "5",
+                    "Interval": "10",
+                    "UnhealthyThreshold": "5",
+                    "HealthyThreshold": "2"
+                },
+                "Subnets": { "Ref": "PublicVpcSubnets" },
+                "SecurityGroups": [
+                    { "Ref": "LBSG" }
+                ]
+            }
+        },
+
+        "AutoscalingGroup": {
+            "Type": "AWS::AutoScaling::AutoScalingGroup",
+            "Properties": {
+                "AvailabilityZones": { "Fn::GetAZs": "" },
+                "VPCZoneIdentifier": { "Ref": "PrivateVpcSubnets" },
+                "LaunchConfigurationName": { "Ref": "LaunchConfig" },
+                "MinSize": { "Ref": "Capacity" },
+                "MaxSize": { "Ref": "Capacity" },
+                "DesiredCapacity": { "Ref": "Capacity" },
+                "HealthCheckType": "ELB",
+                "HealthCheckGracePeriod": 300,
+                "LoadBalancerNames": [ { "Ref": "LB" } ],
+                "Tags": [
+                    {
+                        "Key": "Stage",
+                        "Value": { "Ref": "Stage" },
+                        "PropagateAtLaunch": "true"
+                    },
+                    {
+                        "Key": "Stack",
+                        "Value": { "Ref": "Stack" },
+                        "PropagateAtLaunch": "true"
+                    },
+                    {
+                        "Key": "App",
+                        "Value": { "Ref": "App" },
+                        "PropagateAtLaunch": "true"
+                    },
+                    {
+                        "Key": "Name",
+                        "Value": { "Fn::Join": [ "", [ { "Ref": "App" }, "-", { "Ref": "Stage" } ] ] },
+                        "PropagateAtLaunch": "true"
+                    }
+                ]
+            }
+        },
+
+        "LaunchConfig": {
+            "Type": "AWS::AutoScaling::LaunchConfiguration",
+            "Properties": {
+                "ImageId": { "Ref": "PackerAMI" },
+                "SecurityGroups": [ { "Ref": "SecGroup" }, { "Ref": "LBSG" } ],
+                "InstanceType": { "Ref": "InstanceType" },
+                "IamInstanceProfile": { "Ref": "InstanceProfile" },
+                "AssociatePublicIpAddress": "False",
+                "KeyName": { "Ref": "KeyName" },
+                "UserData": {
+                    "Fn::Base64": {
+                        "Fn::Join": [ "\n", [
+                            "#!/bin/bash -ev",
+                            "cd /tmp",
+                            { "Fn::Join": [ "", [ "wget https://s3-eu-west-1.amazonaws.com/parking-lot/", { "Ref": "Stage" }, "/parking-lot.tar.gz" ] ] },
+                            "tar -xvf parking-lot.tar.gz"
+                        ] ]
+                    }
+                }
+            }
+        },
+
+        "LBSG": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "VpcId": { "Ref": "VpcId" },
+                "GroupDescription": "Loadbalancer Security Group",
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "80",
+                        "ToPort": "80",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ],
+                "SecurityGroupEgress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "80",
+                        "ToPort": "80",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+
+        "SecGroup": {
+            "Type": "AWS::EC2::SecurityGroup",
+            "Properties": {
+                "GroupDescription": "Instance Security Group",
+                "VpcId": { "Ref": "VpcId" },
+                "SecurityGroupIngress": [
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "80",
+                        "ToPort": "80",
+                        "SourceSecurityGroupId": { "Ref": "LBSG" }
+                    },
+                    {
+                        "IpProtocol": "tcp",
+                        "FromPort": "22",
+                        "ToPort": "22",
+                        "CidrIp": "10.0.0.0/8"
+                    },
+                    {
+                        "IpProtocol": "icmp",
+                        "FromPort": "-1",
+                        "ToPort": "-1",
+                        "CidrIp": "0.0.0.0/0"
+                    }
+                ]
+            }
+        },
+
+        "ConfigBucketPolicy": {
+            "Type": "AWS::IAM::Policy",
+            "Properties": {
+                "PolicyName": "ConfigBucketPolicy",
+                "PolicyDocument": {
+                    "Version" : "2012-10-17",
+                    "Statement": [
+                        {
+                            "Action": [ "s3:ListBucket" ],
+                            "Effect": "Allow",
+                            "Resource": [
+                              { "Fn::Join": [ "",
+                                [ "arn:aws:s3:::", { "Ref" : "ConfigBucket" } ]
+                              ] }
+                            ]
+                        },
+                        {
+                            "Action": [ "s3:GetObject" ],
+                            "Effect": "Allow",
+                            "Resource": [
+                              { "Fn::Join": [ "",
+                                [ "arn:aws:s3:::", { "Ref" : "ConfigBucket" }, "/*" ]
+                              ] }
+                            ]
+                        }
+                    ]
+                },
+                "Roles": [ { "Ref": "Role" } ]
+            }
+        },
+
+        "InstanceProfile": {
+            "Type": "AWS::IAM::InstanceProfile",
+            "Properties": {
+                "Path": "/",
+                "Roles": [ { "Ref": "Role" } ]
+            }
+        }
+    }
+
+}

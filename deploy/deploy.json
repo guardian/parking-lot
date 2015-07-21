@@ -1,0 +1,23 @@
+{
+    "defaultStacks": ["parking-lot"],
+    "packages": {
+        "service": {
+            "type": "autoscaling",
+            "data": {
+                "port": 80,
+                "bucket": "parking-lot"
+            }
+        }
+    },
+    "recipes": {
+        "default": {
+            "depends": ["artifactUploadOnly", "deployOnly"]
+        },
+        "deployOnly": {
+            "actionsBeforeApp": ["service.deploy"]
+        },
+        "artifactUploadOnly": {
+            "actionsBeforeApp": ["service.uploadArtifacts"]
+        }
+    }
+}
