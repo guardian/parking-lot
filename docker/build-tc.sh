@@ -1,10 +1,12 @@
-#!/bin/bash
+#!/bin/bash -x
 
 NAME=${TEAMCITY_BUILDCONF_NAME%-docker}
 
 DIR=$(dirname $0)
 
+cp ${DIR}/../scripts/setup.sh $DIR
 docker build -t="working-${NAME}:${BUILD_NUMBER}" ${DIR}/
+rm ${DIR}/setup.sh
 
 # Start container
 CONTAINER_ID=$(docker run -d working-${NAME}:${BUILD_NUMBER} /bin/bash)
