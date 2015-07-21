@@ -25,9 +25,3 @@ IMAGE_ID=$(docker images | awk "/${NAME} +${BUILD_NUMBER}/ {print \$3}")
 docker tag $IMAGE_ID dockreg.gutools.co.uk:8080/${NAME}:latest
 
 docker push dockreg.gutools.co.uk:8080/${NAME}
-
-# Kill any running containers now that we're finished
-docker ps -a --no-trunc | grep 'Exit' | awk '{print $1}' | xargs -L 1 -r docker rm
-
-# Clean up ALL images
-docker images --no-trunc | awk '{print $3}' | grep -v IMAGE | xargs -L 1 -r docker rmi
