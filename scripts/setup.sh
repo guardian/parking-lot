@@ -1,11 +1,5 @@
 #!/bin/bash
 
-#cat << EOF > /etc/apt/sources.list
-#deb http://mirror.internode.on.net/pub/ubuntu/ubuntu trusty main restricted universe multiverse
-#deb http://mirror.internode.on.net/pub/ubuntu/ubuntu trusty-security main restricted universe multiverse
-#deb http://mirror.internode.on.net/pub/ubuntu/ubuntu trusty-updates main restricted universe multiverse
-#EOF
-
 # Update index and install packages
 cat << EOF > /etc/apt/sources.list
 deb http://archive.ubuntu.com/ubuntu/ trusty main restricted universe multiverse
