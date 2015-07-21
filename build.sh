@@ -2,7 +2,7 @@
 
 ROOT_DIR=$(cd $(dirname "$0"); pwd)
 
-DOCKER_NAME=dockreg.gutools.co.uk:8080/parking-lot
+DOCKER_NAME=dockreg.gutools.co.uk:8080/parking-lot:latest
 
 ######## Run tests ########
 
