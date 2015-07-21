@@ -2,7 +2,9 @@
 
 NAME=${TEAMCITY_BUILDCONF_NAME%-docker}
 
-docker build -t="working-${NAME}:${BUILD_NUMBER}" .
+DIR=$(dirname $0)
+
+docker build -t="working-${NAME}:${BUILD_NUMBER}" ${DIR}/
 
 # Start container
 CONTAINER_ID=$(docker run -d working-${NAME}:${BUILD_NUMBER} /bin/bash)

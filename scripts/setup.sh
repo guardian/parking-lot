@@ -9,12 +9,11 @@ EOF
 
 apt-get update
 
-if [ -f /.dockerinit ]; then
-    # If running in Docker, don't install everything
-    DEBIAN_FRONTEND=noninteractive apt-get --yes --force-yes install apache2
-else
+DEBIAN_FRONTEND=noninteractive apt-get --yes --force-yes install apache2
+
+if [ ! -f /.dockerinit ]; then
     # If not in Docker
-    DEBIAN_FRONTEND=noninteractive apt-get --yes --force-yes install wget cloud-guest-utils python-setuptools awscli apache2
+    DEBIAN_FRONTEND=noninteractive apt-get --yes --force-yes install wget cloud-guest-utils python-setuptools awscli
 
     # Install AWS CFN bootstrap
     wget -P /tmp https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-latest.tar.gz

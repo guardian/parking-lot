@@ -2,8 +2,6 @@ FROM ubuntu:14.04
 
 MAINTAINER Andy Botting
 
-#RUN apt-get update && apt-get install -y apache2 && apt-get clean && rm -rf /var/lib/apt/lists/*
-
 # Settings from /etc/init.d/apache2
 ENV APACHE_CONFDIR /etc/apache2
 ENV APACHE_ENVVARS $APACHE_CONFDIR/envvars
@@ -18,6 +16,7 @@ ENV LANG C
 
 RUN mkdir -p $APACHE_RUN_DIR $APACHE_LOCK_DIR $APACHE_LOG_DIR
 
+# Setup the container
 ADD setup.sh /tmp/setup.sh
 RUN /bin/bash /tmp/setup.sh
 
