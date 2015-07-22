@@ -6,6 +6,9 @@ set -e
 
 SCRIPTPATH=$(cd $(dirname $0); pwd -P)
 
+# Set up packer
+$SCRIPTPATH/setup-packer.sh
+
 # try to get build branch
 if [ -n "${TEAMCITY_BUILD_PROPERTIES_FILE}" ]; then
   CONFIG_FILE=$( grep "teamcity.configuration.properties.file=" ${TEAMCITY_BUILD_PROPERTIES_FILE} | cut -d'=' -f2 )
@@ -18,7 +21,7 @@ FLAGS='-color=false'
 [ -z "${BUILD_NUMBER}" ] && FLAGS="-debug"
 
 # set PACKER_HOME if it isn't already provided
-#[ -z "${PACKER_HOME}" ] && PACKER_HOME=${SCRIPTPATH}/../packer_bin
+[ -z "${PACKER_HOME}" ] && PACKER_HOME=${SCRIPTPATH}/packer_bin
 
 # set build info to DEV if not in TeamCity
 [ -z "${BUILD_NUMBER}" ] && BUILD_NUMBER="DEV"
@@ -32,8 +35,7 @@ if [ -z "${BUILD_NAME}" ]; then
 fi
 
 # Copy AWS_DEFAULT_PROFILE to AWS_PROFILE (see https://github.com/mitchellh/goamz/blob/master/aws/aws.go)
-if [ -n ${AWS_DEFAULT_PROFILE+x} ]
-then
+if [ -n ${AWS_DEFAULT_PROFILE+x} ]; then 
   export AWS_PROFILE=${AWS_DEFAULT_PROFILE}
 fi
 
@@ -42,8 +44,8 @@ PRISM_JSON=$(curl -s "http://prism.gutools.co.uk/sources?resource=instance&origi
 ACCOUNT_NUMBERS=$(echo ${PRISM_JSON} | jq '.data[].origin.accountNumber' | tr '\n' ',' | sed s/\"//g | sed s/,$//)
 echo "Account numbers for AMI: $ACCOUNT_NUMBERS"
 
-echo "Running packer with ${PACKER_FILE}" 1>&2
-packer-io build $FLAGS \
+echo "Running packer with packer.json" 1>&2
+${PACKER_HOME}/packer build $FLAGS \
   -var "build_number=${BUILD_NUMBER}" -var "build_name=${BUILD_NAME}" \
   -var "build_branch=${BUILD_BRANCH}" -var "account_numbers=${ACCOUNT_NUMBERS}" \
   -var "build_vcs_ref=${BUILD_VCS_REF}" \
