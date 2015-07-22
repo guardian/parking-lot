@@ -6,3 +6,4 @@ docker ps -a --no-trunc | grep 'Exit' | awk '{print $1}' | xargs -L 1 -r docker 
 # Clean up ALL images
 docker images --no-trunc | awk '{print $3}' | grep -v IMAGE | xargs -L 1 -r docker rmi
 
+exit 0
