@@ -33,7 +33,7 @@
     {
       "type": "shell",
       "execute_command": "{{ .Vars }} sudo -E bash -x '{{ .Path }}'",
-      "script": "../scripts/setup.sh"
+      "script": "setup.sh"
     }
   ]
 }

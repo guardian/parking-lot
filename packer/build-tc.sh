@@ -7,7 +7,10 @@ set -e
 SCRIPTPATH=$(cd $(dirname $0); pwd -P)
 
 # Set up packer
-$SCRIPTPATH/setup-packer.sh
+${SCRIPTPATH}/setup-packer.sh
+
+# Copy our setup script
+cp ${SCRIPTPATH}/../scripts/setup.sh $SCRIPTPATH
 
 # try to get build branch
 if [ -n "${TEAMCITY_BUILD_PROPERTIES_FILE}" ]; then
