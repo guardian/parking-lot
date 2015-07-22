@@ -16,7 +16,7 @@
       "instance_type": "m3.medium",
       "ssh_username": "ubuntu",
       "run_tags": {"Stage":"INFRA", "Stack":"packer", "App": "{{user `build_name`}}"},
-      "ami_name": "_{{user `build_number`}}_{{isotime \"2006/01/02_15-04-05\"}}",
+      "ami_name": "{{user `build_name`}}_{{user `build_number`}}_{{isotime \"2006/01/02_15-04-05\"}}",
       "ami_description": "AMI for parking-lot built by TeamCity: {{user `build_name`}}#{{user `build_number`}}",
       "ami_users": "{{user `account_numbers`}}",
       "tags": {
