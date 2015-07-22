@@ -6,7 +6,7 @@ DOCKER_NAME=parking-lot:latest
 DOCKER_URI=dockreg.gutools.co.uk:8080/$DOCKER_NAME
 
 # Boot docker
-docker run -t -v $ROOT_DIR/sites:/etc/apache2/sites-enabled -p 18080:80 $DOCKER_URI /usr/sbin/apache2 -DFOREGROUND
+docker run -d -t -v $ROOT_DIR/sites:/etc/apache2/sites-enabled -p 18080:80 $DOCKER_URI /usr/sbin/apache2 -DFOREGROUND
 [ $? -gt 0 ] && exit 1
 
 # Run test scripts
