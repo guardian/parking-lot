@@ -31,8 +31,8 @@ docker rmi -f $DOCKER_URI
 mkdir target
 cd target
 
-cp -r sites .
-cp deploy/deploy.json .
+cp -r ${ROOT_DIR}/sites .
+cp ${ROOT_DIR}/deploy/deploy.json .
 zip -rv artifacts.zip sites/ deploy.json
 
 echo "##teamcity[publishArtifacts '$(pwd)/artifacts.zip => .']"
