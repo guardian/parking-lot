@@ -1,23 +1,21 @@
 {
-    "defaultStacks": ["parking-lot"],
-    "packages": {
-        "service": {
-            "type": "autoscaling",
-            "data": {
-                "port": 80,
-                "bucket": "parking-lot"
+    "packages":{
+        "parking-lot":{
+            "type":"aws-s3",
+            "data":{
+                "prefixStage": false,
+                "prefixPackage": false,
+                "bucketResource": "aws-bucket",
+                "cacheControl": [ ]
             }
         }
     },
-    "recipes": {
-        "default": {
-            "depends": ["artifactUploadOnly", "deployOnly"]
+    "recipes":{
+        "default":{
+            "depends" : ["staticFilesUpload"]
         },
-        "deployOnly": {
-            "actionsBeforeApp": ["service.deploy"]
-        },
-        "artifactUploadOnly": {
-            "actionsBeforeApp": ["service.uploadArtifacts"]
+        "staticFilesUpload":{
+            "actionsBeforeApp": ["parking-lot.uploadStaticFiles"]
         }
     }
 }
