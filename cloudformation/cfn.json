@@ -1,12 +1,12 @@
 {
     "AWSTemplateFormatVersion": "2010-09-09",
-    "Description": "Simian Army",
+    "Description": "Parking Lot",
 
     "Parameters": {
         "App": {
             "Description": "App applied as a tag",
             "Type": "String",
-            "Default": "elk"
+            "Default": "parking-lot"
         },
         "Stack": {
             "Description": "Stack applied as a tag",
@@ -34,28 +34,13 @@
         "InstanceType": {
             "Description": "EC2 instance type",
             "Type": "String",
-            "Default": "m3.large",
+            "Default": "t2.medium",
             "AllowedValues": [
                 "t2.micro",
                 "t2.small",
                 "t2.medium",
                 "m3.medium",
                 "m3.large"
-            ],
-            "ConstraintDescription": "must be a valid EC2 instance type"
-        },
-        "InstanceType": {
-            "Description": "EC2 instance type",
-            "Type": "String",
-            "Default": "t2.micro",
-            "AllowedValues": [
-                "t2.micro",
-                "t2.small",
-                "t2.medium",
-                "m3.medium",
-                "m3.large",
-                "m3.xlarge",
-                "m3.2xlarge"
             ],
             "ConstraintDescription": "must be a valid EC2 instance type"
         },
@@ -72,8 +57,12 @@
             "Description": "ID of the VPC onto which to launch the application eg. vpc-1234abcd",
             "Type": "String"
         },
+        "PublicVpcSubnets" : {
+            "Description": "Subnets to use in VPC for ELB eg. subnet-abcd1234",
+            "Type": "CommaDelimitedList"
+        },
         "PrivateVpcSubnets" : {
-            "Description": "Subnets to use in VPC for public ELB eg. subnet-abcd1234",
+            "Description": "Subnets to use in VPC for Instances eg. subnet-abcd1234",
             "Type": "CommaDelimitedList"
         }
     },
@@ -87,7 +76,7 @@
                 "Listeners": [ {
                     "Protocol": "HTTP",
                     "LoadBalancerPort": "80",
-                    "InstancePort": "80",
+                    "InstancePort": "80"
                 } ],
                 "HealthCheck": {
                     "Target": "HTTP:80/_",
@@ -155,7 +144,8 @@
                             "#!/bin/bash -ev",
                             "cd /tmp",
                             { "Fn::Join": [ "", [ "wget https://s3-eu-west-1.amazonaws.com/parking-lot/", { "Ref": "Stage" }, "/parking-lot.tar.gz" ] ] },
-                            "tar -xvf parking-lot.tar.gz"
+                            "tar -xvf parking-lot.tar.gz",
+                            "service apache2 start"
                         ] ]
                     }
                 }
@@ -211,6 +201,24 @@
                         "CidrIp": "0.0.0.0/0"
                     }
                 ]
+            }
+        },
+
+        "Role": {
+            "Type": "AWS::IAM::Role",
+            "Properties": {
+                "Path": "/",
+                "AssumeRolePolicyDocument": {
+                    "Statement": [
+                        {
+                            "Action": "sts:AssumeRole",
+                            "Effect": "Allow",
+                            "Principal": {
+                                "Service": [ "ec2.amazonaws.com" ]
+                            }
+                        }
+                    ]
+                }
             }
         },
 

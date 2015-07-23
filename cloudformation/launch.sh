@@ -67,11 +67,12 @@ aws cloudformation $ACTION-stack \
     --stack-name parking-lot-$STAGE \
     --capabilities CAPABILITY_IAM \
     --parameters \
-        ParameterKey=App,ParameterValue=server \
+        ParameterKey=App,ParameterValue=service \
         ParameterKey=Capacity,ParameterValue=$capacity \
         ParameterKey=InstanceType,ParameterValue=$instance_type \
         ParameterKey=KeyName,ParameterValue=bootstrap \
         ParameterKey=PackerAMI,ParameterValue=$AMI \
+        ParameterKey=PublicVpcSubnets,ParameterValue='subnet-90ef1bc9\,subnet-ce51faab\,subnet-74469703' \
         ParameterKey=PrivateVpcSubnets,ParameterValue='subnet-91ef1bc8\,subnet-cf51faaa\,subnet-75469702' \
         ParameterKey=ConfigBucket,ParameterValue=parking-lot \
         ParameterKey=Stack,ParameterValue=parking-lot \
