@@ -31,6 +31,11 @@
   ],
   "provisioners": [
     {
+      "type": "file",
+      "source": "../scripts",
+      "destination": "/tmp"
+    },
+    {
       "type": "shell",
       "execute_command": "{{ .Vars }} sudo -E bash -x '{{ .Path }}'",
       "script": "../scripts/setup.sh"
