@@ -24,6 +24,10 @@ if [ ! -f /.dockerinit ]; then
 
     # Ensure we don't swap unnecessarily
     echo "vm.overcommit_memory=1" > /etc/sysctl.d/70-vm-overcommit
+
+    # Sync script
+    cp /tmp/scripts/parking-lot-sync.sh /usr/local/sbin/parking-lot-sync
+    cp /tmp/scripts/parking-lot-sync.cron /etc/cron.d/parking-lot-sync
 fi
 
 # Disable modules
@@ -39,3 +43,4 @@ done
 # Clean up
 apt-get clean
 rm -rf /var/lib/apt/lists/*
+rm -fr /tmp/scripts

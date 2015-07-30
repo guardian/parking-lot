@@ -1,0 +1,3 @@
+SHELL=/bin/bash
+PATH=/sbin:/bin:/usr/sbin:/usr/bin
+*/5 * * * * root sleep $(($RANDOM\%200)); /usr/local/sbin/parking-lot-sync
