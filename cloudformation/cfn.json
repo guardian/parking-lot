@@ -76,7 +76,7 @@
                     "InstancePort": "80"
                 } ],
                 "HealthCheck": {
-                    "Target": "HTTP:80/_",
+                    "Target": "HTTP:80/healthcheck",
                     "Timeout": "5",
                     "Interval": "10",
                     "UnhealthyThreshold": "5",

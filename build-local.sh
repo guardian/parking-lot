@@ -8,6 +8,7 @@ echo "Booting container..."
 docker run -d -t -v $ROOT_DIR/sites:/etc/apache2/sites-enabled -p 18080:80 $DOCKER_NAME /bin/bash -c 'source /etc/apache2/envvars; /usr/sbin/apache2 -DFOREGROUND' >/dev/null
 
 if [ $? -eq 0 ]; then
+    sleep 2
     CONTAINER_ID=$(docker ps | awk "/$DOCKER_NAME/ {print \$1}")
     if [ -z $CONTAINER_ID ]; then
         echo "Can't find running container"
