@@ -10,7 +10,8 @@
         },
         "Stack": {
             "Description": "Stack applied as a tag",
-            "Type": "String"
+            "Type": "String",
+            "Default": "parking-lot"
         },
         "KeyName": {
             "Description": "Name of an existing EC2 KeyPair for SSH access",
@@ -60,10 +61,6 @@
         "PublicVpcSubnets" : {
             "Description": "Subnets to use in VPC for ELB eg. subnet-abcd1234",
             "Type": "CommaDelimitedList"
-        },
-        "PrivateVpcSubnets" : {
-            "Description": "Subnets to use in VPC for Instances eg. subnet-abcd1234",
-            "Type": "CommaDelimitedList"
         }
     },
 
@@ -96,7 +93,7 @@
             "Type": "AWS::AutoScaling::AutoScalingGroup",
             "Properties": {
                 "AvailabilityZones": { "Fn::GetAZs": "" },
-                "VPCZoneIdentifier": { "Ref": "PrivateVpcSubnets" },
+                "VPCZoneIdentifier": { "Ref": "PublicVpcSubnets" },
                 "LaunchConfigurationName": { "Ref": "LaunchConfig" },
                 "MinSize": { "Ref": "Capacity" },
                 "MaxSize": { "Ref": "Capacity" },
@@ -136,16 +133,13 @@
                 "SecurityGroups": [ { "Ref": "SecGroup" }, { "Ref": "LBSG" } ],
                 "InstanceType": { "Ref": "InstanceType" },
                 "IamInstanceProfile": { "Ref": "InstanceProfile" },
-                "AssociatePublicIpAddress": "False",
+                "AssociatePublicIpAddress": "True",
                 "KeyName": { "Ref": "KeyName" },
                 "UserData": {
                     "Fn::Base64": {
                         "Fn::Join": [ "\n", [
                             "#!/bin/bash -ev",
-                            "cd /tmp",
-                            { "Fn::Join": [ "", [ "wget https://s3-eu-west-1.amazonaws.com/parking-lot/", { "Ref": "Stage" }, "/parking-lot.tar.gz" ] ] },
-                            "tar -xvf parking-lot.tar.gz",
-                            "service apache2 start"
+                            "bash -x /usr/local/sbin/parking-lot-sync"
                         ] ]
                     }
                 }
@@ -192,7 +186,7 @@
                         "IpProtocol": "tcp",
                         "FromPort": "22",
                         "ToPort": "22",
-                        "CidrIp": "10.0.0.0/8"
+                        "CidrIp": "77.91.248.0/21"
                     },
                     {
                         "IpProtocol": "icmp",
@@ -204,7 +198,7 @@
             }
         },
 
-        "Role": {
+        "InstanceRole": {
             "Type": "AWS::IAM::Role",
             "Properties": {
                 "Path": "/",
@@ -227,29 +221,19 @@
             "Properties": {
                 "PolicyName": "ConfigBucketPolicy",
                 "PolicyDocument": {
-                    "Version" : "2012-10-17",
                     "Statement": [
-                        {
-                            "Action": [ "s3:ListBucket" ],
-                            "Effect": "Allow",
-                            "Resource": [
-                              { "Fn::Join": [ "",
-                                [ "arn:aws:s3:::", { "Ref" : "ConfigBucket" } ]
-                              ] }
-                            ]
-                        },
                         {
                             "Action": [ "s3:GetObject" ],
                             "Effect": "Allow",
                             "Resource": [
-                              { "Fn::Join": [ "",
-                                [ "arn:aws:s3:::", { "Ref" : "ConfigBucket" }, "/*" ]
-                              ] }
+                                { "Fn::Join": [ "", 
+                                    [ "arn:aws:s3:::", { "Ref" : "ConfigBucket" }, "/*" ] ]
+                                }
                             ]
                         }
                     ]
                 },
-                "Roles": [ { "Ref": "Role" } ]
+                "Roles": [ { "Ref": "InstanceRole" } ]
             }
         },
 
@@ -257,7 +241,7 @@
             "Type": "AWS::IAM::InstanceProfile",
             "Properties": {
                 "Path": "/",
-                "Roles": [ { "Ref": "Role" } ]
+                "Roles": [ { "Ref": "InstanceRole" } ]
             }
         }
     }
