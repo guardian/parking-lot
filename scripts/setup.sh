@@ -40,6 +40,9 @@ for module in alias rewrite; do
   a2enmod $module
 done
 
+# Add initial healthcheck file
+echo 'Not yet provisioned' > /var/www/html/healthcheck
+
 # Clean up
 apt-get clean
 rm -rf /var/lib/apt/lists/*

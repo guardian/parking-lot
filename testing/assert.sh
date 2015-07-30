@@ -177,11 +177,11 @@ _skip() {
 
 
 function test_return_code() {
-    assert "curl -s -o /dev/null -w '%{http_code}' -H 'Host: $1' http://localhost:18080/${2}" ${3}
+    assert "curl -s -o /dev/null -w '%{http_code}' -H 'Host: $1' http://localhost:18080${2}" ${3}
 }
 
 function test_redirect() {
-    assert "curl -s -o /dev/null -w '%{redirect_url}' -H 'Host: $1' http://localhost:18080/${2}" "${3}"
+    assert "curl -s -o /dev/null -w '%{redirect_url}' -H 'Host: $1' http://localhost:18080${2}" "${3}"
 }
 
 _assert_reset

@@ -1,11 +1,11 @@
-#!/bin/bash -e
+#!/bin/bash
 
 ROOT_DIR=$(cd $(dirname "$0"); pwd)
 DOCKER_NAME=parking-lot:latest
 
 # Boot docker
 echo "Booting container..."
-docker run -d -t -v $ROOT_DIR/sites:/etc/apache2/sites-enabled -p 18080:80 $DOCKER_NAME /bin/bash -c 'source /etc/apache2/envvars; /usr/sbin/apache2 -DFOREGROUND' >/dev/null
+docker run -d -t -v $ROOT_DIR/sites:/etc/apache2/sites-enabled -p 18080:80 $DOCKER_NAME >/dev/null
 
 if [ $? -eq 0 ]; then
     sleep 2
@@ -16,9 +16,7 @@ if [ $? -eq 0 ]; then
         # Run test scripts
         echo "Running tests..."
         $ROOT_DIR/testing/run-tests.sh
-        if [ $? -gt 0 ]; then
-            $exit_status=1
-        else
+        if [ $? -eq 0 ]; then
             # Build working directory
             [ -d build ] && rm -rf build
             mkdir -p build/parking-lot
@@ -27,9 +25,9 @@ if [ $? -eq 0 ]; then
             # Add build files
             cp -r ${ROOT_DIR}/sites parking-lot/
 
-            echo "Uploading to S3..."
-            tar -zcvf - parking-lot/ | aws s3 cp - s3://parking-lot/PROD/parking-lot.tar.gz
-            git rev-parse HEAD | aws s3 cp - s3://parking-lot/PROD/parking-lot-version.txt
+            #echo "Uploading to S3..."
+            #tar -zcvf - parking-lot/ | aws s3 cp - s3://parking-lot/PROD/parking-lot.tar.gz
+            #git rev-parse HEAD | aws s3 cp - s3://parking-lot/PROD/parking-lot-version.txt
         fi
     fi
 fi
