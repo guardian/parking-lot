@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/bash -x
 
 set -e
 
@@ -32,7 +32,7 @@ if [ $? -eq 0 ]; then
     echo "Building artifact..."
     cd $ROOT_DIR/build
     tar -zcvf $ROOT_DIR/build/parking-lot.tar.gz parking-lot/
-    git rev-parse HEAD > $ROOT_DIR/build/parking-lot-version.txt
+    echo "${BUILD_NUMBER} ${BUILD_VCS_NUMBER}" > $ROOT_DIR/build/parking-lot-version.txt
     sha256sum $ROOT_DIR/build/parking-lot.tar.gz | awk '{print $1}' > $ROOT_DIR/build/parking-lot.sha256
     rm -fr $ROOT_DIR/build/parking-lot/
 
