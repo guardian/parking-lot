@@ -74,4 +74,5 @@ else
             ParameterKey=Stack,ParameterValue=infra \
             ParameterKey=Stage,ParameterValue=$STAGE \
             ParameterKey=VpcId,ParameterValue=vpc-1c43a579
+            ParameterKey=AlarmSNS,ParameterValue=arn:aws:sns:eu-west-1:528313740988:parking-lot-notifications
 fi

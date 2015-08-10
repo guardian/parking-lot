@@ -61,7 +61,17 @@
         "PublicVpcSubnets" : {
             "Description": "Subnets to use in VPC for ELB eg. subnet-abcd1234",
             "Type": "CommaDelimitedList"
+        },
+        "AlarmSNS": {
+            "Description": "Amazon SNS topic for alerts",
+            "Default": "arn:aws:sns:eu-west-1:528313740988:parking-lot-notifications",
+            "Type": "String"
         }
+    },
+
+    "Conditions": {
+        "IsProd": { "Fn::Equals": [ { "Ref": "Stage" }, "PROD" ] },
+        "IsCode": { "Fn::Equals": [ { "Ref": "Stage" }, "CODE" ] }
     },
 
     "Resources": {
@@ -243,7 +253,59 @@
                 "Path": "/",
                 "Roles": [ { "Ref": "InstanceRole" } ]
             }
+        },
+
+        "HighLatencyAlert": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "AlarmName": { "Fn::Join": ["-", [ { "Ref": "App" }, { "Ref": "Stage" }, "latency", "alert" ] ] },
+                "AlarmDescription": "Average latency is >= 1s for a 3 minute period",
+                "Namespace": "AWS/ELB",
+                "Dimensions": [ { "Name": "LoadBalancerName", "Value": { "Ref": "LB" } } ],
+                "MetricName": "Latency",
+                "Statistic": "Average",
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "Threshold": "1",
+                "Period": "60",
+                "EvaluationPeriods": "3",
+                "AlarmActions": { "Fn::If": [ "IsProd", [ { "Ref": "AlarmSNS" } ], { "Ref" : "AWS::NoValue" } ] }
+            }
+        },
+
+        "High5xxAlert": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "AlarmName": { "Fn::Join": ["-", [ { "Ref": "App" }, { "Ref": "Stage" }, "5xx", "alert" ] ] },
+                "AlarmDescription": "Number of 5XXs is >= 10 for a 1 minute period",
+                "Namespace": "AWS/ELB",
+                "Dimensions": [ { "Name": "LoadBalancerName", "Value": { "Ref": "LB" } } ],
+                "MetricName": "HTTPCode_Backend_5XX",
+                "Statistic": "Sum",
+                "ComparisonOperator": "GreaterThanOrEqualToThreshold",
+                "Threshold": "1000",
+                "Period": "60",
+                "EvaluationPeriods": "1",
+                "AlarmActions": { "Fn::If": [ "IsProd", [ { "Ref": "AlarmSNS" } ], { "Ref" : "AWS::NoValue" } ] }
+            }
+        },
+
+        "UnhealthyAlarmAlert": {
+            "Type": "AWS::CloudWatch::Alarm",
+            "Properties": {
+                "AlarmName": { "Fn::Join": ["-", [ { "Ref": "App" }, { "Ref": "Stage" }, "unhealthy", "hosts" ] ] },
+                "AlarmDescription": "Number of healthy hosts <= 1 for a 1 minute period",
+                "Namespace": "AWS/ELB",
+                "Dimensions": [ { "Name": "LoadBalancerName", "Value": { "Ref": "LB" } } ],
+                "MetricName": "HealthyHostCount",
+                "Statistic": "Average",
+                "ComparisonOperator": "LessThanOrEqualToThreshold",
+                "Threshold": "1",
+                "Period": "60",
+                "EvaluationPeriods": "1",
+                "AlarmActions": { "Fn::If": [ "IsProd", [ { "Ref": "AlarmSNS" } ], { "Ref" : "AWS::NoValue" } ] }
+            }
         }
+
     }
 
 }
