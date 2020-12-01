@@ -1,3 +1,5 @@
+# Note that this has been deprecated in favour of https://github.com/guardian/domains-platform/
+
 Parking Lot
 ===========
 
